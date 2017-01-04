@@ -1,0 +1,27 @@
+---
+- name: Install docker-gen
+  package:
+    name: docker-gen
+
+- name: Copy the docker-gen template in place
+  copy:
+    src: docker-gen.tmpl
+    dest: "/usr/local/etc/docker-gen.tmpl"
+
+- name: Copy the docker-gen service plist in place
+  become: True
+  copy:
+    src: ch.neckhair.docker-gen.plist
+    dest: "/Library/LaunchDaemons/ch.neckhair.docker-gen.plist"
+
+- name: Check if service is running
+  become: True
+  shell: launchctl list ch.neckhair.docker-gen
+  register: docker_gen_service_check
+  changed_when: False
+  ignore_errors: True
+
+- name: Load the docker-gen service
+  become: True
+  command: "launchctl load -w /Library/LaunchDaemons/ch.neckhair.docker-gen.plist"
+  when: docker_gen_service_check.rc > 0
